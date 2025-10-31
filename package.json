@@ -1,19 +1,27 @@
 {
   "name": "scrapper",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Automação completa de coleta, afiliação, processamento e envio de produtos via WhatsApp.",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "get-products": "node src/tasks/getProducts.js",
+    "affiliate-links": "node src/tasks/afiliateProductLink.js",
+    "generate-messages": "node src/tasks/processador.js",
+    "send-whatsapp": "node src/tasks/bot-whatsapp.js",
+    "run-all": "npm run get-products && npm run affiliate-links && npm run generate-messages && npm run send-whatsapp"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
+   "dependencies": {
     "axios": "^1.10.0",
     "cheerio": "^1.1.0",
+    "clipboardy": "^4.0.0",
+    "csv-parser": "^3.2.0",
     "fs": "^0.0.1-security",
     "path": "^0.12.7",
     "playwright": "^1.54.1"
-  }
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "author": "Thiago Thi",
+  "license": "MIT"
 }
