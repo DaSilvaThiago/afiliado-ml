@@ -10,6 +10,7 @@ const path = require('path');
 
 // Caminho do arquivo JSON gerado pelo getProducts.js
 const jsonPath = path.join(__dirname, '../outputs/data/produtos_ofertas.json');
+const cookiesPath = path.join(__dirname, '../config/cookies.json');
 
 // Lê os produtos salvos
 const produtos = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
@@ -30,12 +31,34 @@ console.log(`📦 Total de lotes: ${LOTES.length}`);
   // Abre o Chrome com contexto persistente (mantém login)
   const browserContext = await chromium.launchPersistentContext(profilePath, {
     headless: false,
-    channel: 'chrome', // usa o Chrome do sistema
     viewport: null,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
   const page = await browserContext.newPage();
+
+  // Carrega cookies se existirem
+  if (fs.existsSync(cookiesPath)) {
+    const cookies = JSON.parse(fs.readFileSync(cookiesPath, 'utf-8'));
+    
+    // Converte cookies para formato Playwright
+    const playwrightCookies = cookies.map(cookie => {
+      const converted = {
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path,
+        expires: cookie.expirationDate || -1,
+        httpOnly: cookie.httpOnly || false,
+        secure: cookie.secure || false,
+        sameSite: cookie.sameSite === 'no_restriction' ? 'None' : (cookie.sameSite || 'Lax')
+      };
+      return converted;
+    });
+    
+    await browserContext.addCookies(playwrightCookies);
+    console.log('🍪 Cookies carregados com sucesso!');
+  }
 
   console.log('🌐 Acessando o gerador de links de afiliado...');
   await page.goto('https://www.mercadolivre.com.br/afiliados/linkbuilder#hub', {
@@ -44,7 +67,7 @@ console.log(`📦 Total de lotes: ${LOTES.length}`);
 
   try {
     console.log('⏳ Aguardando campo de links...');
-    await page.waitForSelector('#url-0', { timeout: 60000 });
+    await page.waitForSelector('#url-0', { timeout: 600000 });
     console.log('✅ Campo de links localizado!');
   } catch (e) {
     console.error('❌ Campo não encontrado. Faça login manualmente e rode novamente.');

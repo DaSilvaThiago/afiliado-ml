@@ -23,6 +23,25 @@ const intervaloMinutos = config.intervaloMinutos;
 
 // --- Funções auxiliares ---
 
+// Converte cookies para o formato do Playwright
+function converterCookies(cookiesJson) {
+  return cookiesJson.map(cookie => {
+    const converted = {
+      name: cookie.name,
+      value: cookie.value,
+      domain: cookie.domain,
+      path: cookie.path,
+      expires: cookie.expirationDate ? cookie.expirationDate : -1,
+      httpOnly: cookie.httpOnly || false,
+      secure: cookie.secure || false,
+      sameSite: cookie.sameSite === 'lax' ? 'Lax' : 
+                cookie.sameSite === 'strict' ? 'Strict' : 
+                cookie.sameSite === 'no_restriction' || cookie.sameSite === null ? 'None' : 'Lax'
+    };
+    return converted;
+  });
+}
+
 // Lê o CSV e retorna apenas as mensagens ainda não enviadas
 function lerMensagensCsv() {
   return new Promise((resolve) => {
@@ -60,14 +79,32 @@ function registrarEnvio(mensagem, enviados) {
     return;
   }
 
+  // Carrega cookies do WhatsApp de variáveis de ambiente
+  let cookies = [];
+  if (process.env.WHATSAPP_COOKIES) {
+    try {
+      const cookiesJson = JSON.parse(process.env.WHATSAPP_COOKIES);
+      cookies = converterCookies(cookiesJson);
+      console.log('🍪 Cookies do WhatsApp carregados dos secrets.');
+    } catch (error) {
+      console.warn('⚠️ Erro ao carregar cookies:', error.message);
+    }
+  }
+
   // Inicia Chrome persistente (mantém login no WhatsApp)
   const browser = await chromium.launchPersistentContext(config.chromeProfilePath, {
     headless: false,
-    args: ['--start-maximized'],
-    executablePath: config.chromeExecutable
+    args: ['--start-maximized', '--no-sandbox', '--disable-setuid-sandbox']
   });
 
   const page = await browser.newPage();
+  
+  // Adiciona cookies antes de acessar o WhatsApp
+  if (cookies.length > 0) {
+    await page.context().addCookies(cookies);
+    console.log('🍪 Cookies adicionados ao navegador.');
+  }
+  
   await page.goto('https://web.whatsapp.com');
   console.log('⏳ Aguardando WhatsApp carregar...');
 

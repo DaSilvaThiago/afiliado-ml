@@ -1,0 +1,10 @@
+console.log('🤖 Mercado Livre Automation - Scrapper Bot');
+console.log('');
+console.log('Available commands:');
+console.log('  npm run get-products      - Scrape products from Mercado Livre');
+console.log('  npm run affiliate-links   - Generate affiliate links');
+console.log('  npm run generate-messages - Download images and create messages');
+console.log('  npm run send-whatsapp     - Send messages via WhatsApp');
+console.log('  npm run run-all           - Run all tasks sequentially');
+console.log('');
+console.log('📚 For more information, check the replit.md file');
